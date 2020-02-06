@@ -15,16 +15,16 @@ kn funk languages [flags]
 ```
 
  # List all known languages
- kn funk languages
+ kn funk languages list
 
  # Install a specific language SDK
- fn funk languages --install go
+ fn funk languages install go
 
  # Update a specific language SDK
- fn funk languages --update nodejs
+ fn funk languages update nodejs
 
  # Uninstall a specific language SDK
- fn funk languages --uninstall java
+ fn funk languages uninstall java
 
 ```
 
@@ -45,4 +45,5 @@ kn funk languages [flags]
 ### SEE ALSO
 
 * [kn funk](kn_funk.md)	 - Functions command group
+* [kn funk languages list](kn_funk_languages_list.md)	 - List available fun(k) language SDKs
 

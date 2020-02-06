@@ -12,20 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package funk
+package languages
 
 import (
-	"github.com/spf13/cobra"
-	"knative.dev/client/pkg/kn/commands"
-	"knative.dev/client/pkg/kn/commands/funk/languages"
+	metav1beta1 "k8s.io/apimachinery/pkg/apis/meta/v1beta1"
+
+	"knative.dev/client/pkg/functions"
+	hprinters "knative.dev/client/pkg/printers"
 )
 
-func NewFunkCommand(p *commands.KnParams) *cobra.Command {
-	funkCmd := &cobra.Command{
-		Use:   "funk",
-		Short: "Functions command group",
+func LanguageListHandlers(h hprinters.PrintHandler) {
+	listLangColumns := []metav1beta1.TableColumnDefinition{
+		{Name: "Language", Type: "string", Description: "Name of fun(k) language.", Priority: 1},
+		{Name: "Installed", Type: "string", Description: "Is the SDK Installed?", Priority: 1},
 	}
-	funkCmd.AddCommand(languages.NewFunkLanguagesCommand(p))
-	funkCmd.AddCommand(NewFunkInitCommand(p))
-	return funkCmd
+	h.TableHandler(listLangColumns, printSdkList)
+}
+
+func printSdkList(sdkList *functions.SdkList, options hprinters.PrintOptions) {
+
 }

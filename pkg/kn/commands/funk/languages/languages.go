@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package funk
+package languages
 
 import (
 	"github.com/spf13/cobra"
@@ -21,16 +21,16 @@ import (
 
 var example = `
  # List all known languages
- kn funk languages
+ kn funk languages list
 
  # Install a specific language SDK
- fn funk languages --install go
+ fn funk languages install go
 
  # Update a specific language SDK
- fn funk languages --update nodejs
+ fn funk languages update nodejs
 
  # Uninstall a specific language SDK
- fn funk languages --uninstall java
+ fn funk languages uninstall java
 `
 
 func NewFunkLanguagesCommand(p *commands.KnParams) *cobra.Command {
@@ -38,10 +38,7 @@ func NewFunkLanguagesCommand(p *commands.KnParams) *cobra.Command {
 		Use:     "languages",
 		Short:   "Manage fun(k) installed language SDKs",
 		Example: example,
-		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			return nil
-		},
 	}
-
+	langCommand.AddCommand(NewLanguagesListCommand(p))
 	return langCommand
 }

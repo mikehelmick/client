@@ -12,22 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package funk
+package functions
 
-import (
-	"github.com/spf13/cobra"
-	"knative.dev/client/pkg/kn/commands"
-	"knative.dev/client/pkg/kn/commands/funk/languages"
-	"knative.dev/client/pkg/kn/commands/funk/types"
-)
+type FunkConfig struct {
+	Functions FunkList `json:"funks"`
+}
 
-func NewFunkCommand(p *commands.KnParams) *cobra.Command {
-	funkCmd := &cobra.Command{
-		Use:   "funk",
-		Short: "Functions command group",
-	}
-	funkCmd.AddCommand(languages.NewFunkLanguagesCommand(p))
-	funkCmd.AddCommand(types.NewEventTypeListCommand(p))
-	funkCmd.AddCommand(NewFunkInitCommand(p))
-	return funkCmd
+type FunkList []FunkFunction
+
+type FunkFunction struct {
+	Name    string `json:"name"`
+	Source  string `json:"source"`
+	Type    string `json:"type"`
+	Returns string `json:"return-type"`
 }

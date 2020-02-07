@@ -42,6 +42,9 @@ type KnEventingClient interface {
 	ListTriggers() (*v1alpha1.TriggerList, error)
 	// UpdateTrigger is used to update an instance of trigger
 	UpdateTrigger(trigger *v1alpha1.Trigger) error
+
+	// ListEventTypes returns a list of EventType Custom Objects
+	ListEventTypes() (*v1alpha1.EventTypeList, error)
 }
 
 // KnEventingClient is a combination of Sources client interface and namespace
@@ -58,6 +61,29 @@ func NewKnEventingClient(client client_v1alpha1.EventingV1alpha1Interface, names
 		client:    client,
 		namespace: namespace,
 	}
+}
+
+func (c *knEventingClient) ListEventTypes() (*v1alpha1.EventTypeList, error) {
+	eventTypeList, err := c.client.EventTypes(c.namespace).List(apis_v1.ListOptions{})
+	if err != nil {
+		return nil, kn_errors.GetError(err)
+	}
+	eventTypeListNew := eventTypeList.DeepCopy()
+	err = updateTriggerGvk(eventTypeListNew)
+	if err != nil {
+		return nil, err
+	}
+
+	eventTypeListNew.Items = make([]v1alpha1.EventType, len(eventTypeList.Items))
+	for idx, eventType := range eventTypeList.Items {
+		eventTypeClone := eventType.DeepCopy()
+		err := updateTriggerGvk(eventTypeClone)
+		if err != nil {
+			return nil, err
+		}
+		eventTypeListNew.Items[idx] = *eventTypeClone
+	}
+	return eventTypeListNew, nil
 }
 
 //CreateTrigger is used to create an instance of trigger

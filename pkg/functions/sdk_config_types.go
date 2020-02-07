@@ -15,12 +15,7 @@
 package functions
 
 import (
-	"encoding/json"
-	"fmt"
-	"io/ioutil"
-	"os"
-
-	homedir "github.com/mitchellh/go-homedir"
+	cfg "knative.dev/client/pkg/cfgfile"
 )
 
 // LanguageConfig is top level structure for the fun(k) config file
@@ -49,41 +44,13 @@ const FunkSdkVersion = 0.1
 
 var ConfigFileName string = "~/.kn/funk/sdks.json"
 
-func resolvedConfigFileName() string {
-	fName, _ := homedir.Expand(ConfigFileName)
-	return fName
-}
-
 func (c *LanguageConfig) SaveLanguageConfig() error {
-	data, err := json.Marshal(c)
-	if err != nil {
-		return err
-	}
-	ioutil.WriteFile(ConfigFileName, data, os.ModeAppend)
-	return nil
-}
-
-func ensureFileExists() error {
-	info, err := os.Stat(resolvedConfigFileName())
-	if os.IsNotExist(err) {
-		config := &LanguageConfig{FunkSdkVersion, make([]SdkStatus, 0)}
-		config.SaveLanguageConfig()
-		return nil
-	}
-	if info.IsDir() {
-		return fmt.Errorf("Unable to write config file at `%s`, it is a directory", ConfigFileName)
-	}
-	return nil
+	return cfg.WriteConfigFile(ConfigFileName, c)
 }
 
 func LoadLanguageConfig() (*LanguageConfig, error) {
-	content, err := ioutil.ReadFile(resolvedConfigFileName())
-	if err != nil {
-		return nil, err
-	}
-
 	config := &LanguageConfig{}
-	err = json.Unmarshal(content, config)
+	err := cfg.LoadConfigFile(ConfigFileName, config)
 	if err != nil {
 		return nil, err
 	}

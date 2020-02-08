@@ -12,30 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package funk
+package finit
 
 import (
 	"errors"
 
 	"github.com/spf13/cobra"
+	"knative.dev/client/pkg/functions"
 	"knative.dev/client/pkg/kn/commands"
 )
 
 // NewFunkInitCommand sets up the "funk init" command.
 func NewFunkInitCommand(p *commands.KnParams) *cobra.Command {
-	var editFlags FunkInitFlags
-
 	funkInitCommand := &cobra.Command{
-		Use:     "init DIR --lang LANGUAGE",
-		Short:   "Initialize a functions project for a programming language",
-		Example: "",
+		Use:   "init SDK-NAME",
+		Short: "Initialize a functions project for a programming language in the current directory",
+		Example: `
+    # Initialize a Go project
+    kn funk init go
+
+    # Initialize a NodeJS-10 project
+    kn funk init nodejs-10`,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
-			dir, err := validateParams(args, editFlags)
+			sdkName, err := validateParams(args)
 			if err != nil {
 				return err
 			}
 
-			err = initDirectory(dir)
+			err = functions.InitializeProject(sdkName)
 			if err != nil {
 				return err
 			}
@@ -44,22 +48,13 @@ func NewFunkInitCommand(p *commands.KnParams) *cobra.Command {
 		},
 	}
 	commands.AddNamespaceFlags(funkInitCommand.Flags(), false)
-	editFlags.AddInitFlags(funkInitCommand)
 	return funkInitCommand
 }
 
-func initDirectory(dir string) error {
-
-	return nil
-}
-
-func validateParams(args []string, f FunkInitFlags) (string, error) {
+func validateParams(args []string) (string, error) {
 	if len(args) != 1 {
-		return "", errors.New("'funk init' requires the directory to initialize")
+		return "", errors.New("'funk init' requires the SDK to initialize with")
 	}
-	directory := args[0]
-	if f.Language == "" {
-		return "", errors.New("'funk init' requires the language to use for --lang")
-	}
-	return directory, nil
+	sdkName := args[0]
+	return sdkName, nil
 }

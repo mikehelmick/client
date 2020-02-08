@@ -51,7 +51,7 @@ func NewLanguagesListCommand(p *commands.KnParams) *cobra.Command {
 			// i.e. convert to be a k8s API object
 			fmt.Fprintf(cmd.OutOrStdout(), "%15s %15s\n", "fun(k) SDK", "Installed?")
 			for _, sdk := range cfg.Sdks {
-				fmt.Fprintf(cmd.OutOrStdout(), "%15s %15s\n", sdk.Language, friendlyBool(sdk.Installed))
+				fmt.Fprintf(cmd.OutOrStdout(), "%15s %15s\n", sdk.SdkName, friendlyBool(sdk.Installed))
 			}
 
 			return nil

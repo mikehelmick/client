@@ -17,6 +17,7 @@ package funk
 import (
 	"github.com/spf13/cobra"
 	"knative.dev/client/pkg/kn/commands"
+	"knative.dev/client/pkg/kn/commands/funk/finit"
 	"knative.dev/client/pkg/kn/commands/funk/languages"
 	"knative.dev/client/pkg/kn/commands/funk/types"
 )
@@ -28,6 +29,6 @@ func NewFunkCommand(p *commands.KnParams) *cobra.Command {
 	}
 	funkCmd.AddCommand(languages.NewFunkLanguagesCommand(p))
 	funkCmd.AddCommand(types.NewEventTypeListCommand(p))
-	funkCmd.AddCommand(NewFunkInitCommand(p))
+	funkCmd.AddCommand(finit.NewFunkInitCommand(p))
 	return funkCmd
 }

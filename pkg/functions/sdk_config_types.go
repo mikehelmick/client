@@ -28,7 +28,7 @@ type LanguageConfig struct {
 
 // SdkStatus sotres the last known config for any SDKs
 type SdkStatus struct {
-	Language    string  `json:"language"`
+	SdkName     string  `json:"sdk-name"`
 	LangVersion string  `json:"language-version,omitempty"`
 	SdkVersion  float32 `json:"sdk-version"`
 	Installed   bool    `json:"installed"`

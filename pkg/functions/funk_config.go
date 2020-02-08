@@ -14,7 +14,18 @@
 
 package functions
 
+import (
+	"fmt"
+
+	cfg "knative.dev/client/pkg/cfgfile"
+)
+
+// TODO(mikehelmick) - Everything in this moduel should know how to walk
+// up the directory hierarchy looking for a we funk file.
+const FunkConfigFile = "we.funk"
+
 type FunkConfig struct {
+	FunkSDK   string   `json:"funk-sdk"`
 	Functions FunkList `json:"funks"`
 }
 
@@ -25,4 +36,21 @@ type FunkFunction struct {
 	Source  string `json:"source"`
 	Type    string `json:"type"`
 	Returns string `json:"return-type"`
+}
+
+func InitializeProject(sdkName string) error {
+	if ok, err := cfg.DoesFileExist(FunkConfigFile); err != nil {
+		return err
+	} else if ok {
+		return fmt.Errorf("Unable to intialize proejct, %s config file already exists.", FunkConfigFile)
+	}
+
+	funkCfg := &FunkConfig{}
+	funkCfg.FunkSDK = sdkName
+	// TODO - valide the SDK choice
+	return cfg.WriteConfigFile(FunkConfigFile, funkCfg)
+}
+
+func LoadFunkConfig() (*FunkConfig, error) {
+	return nil, nil
 }

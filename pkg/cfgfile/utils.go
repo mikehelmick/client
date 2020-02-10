@@ -20,6 +20,7 @@ import (
 	"io/ioutil"
 	"os"
 
+	"github.com/ghodss/yaml"
 	homedir "github.com/mitchellh/go-homedir"
 )
 
@@ -54,6 +55,24 @@ func LoadOrCreateConfig(file string, contents interface{}) error {
 		return LoadConfigFile(file, contents)
 	}
 	return WriteConfigFile(file, contents)
+}
+
+func LoadYamlFile(file string, contents interface{}) error {
+	content, err := ioutil.ReadFile(resolveFileName(file))
+	if err != nil {
+		return err
+	}
+
+	jsonBytes, err := yaml.YAMLToJSON(content)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal(jsonBytes, contents)
+	if err != nil {
+		return err
+	}
+	return nil
 }
 
 // LoadConfigFile loads a config file if it exists. error if not.

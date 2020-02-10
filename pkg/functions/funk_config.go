@@ -38,19 +38,30 @@ type FunkFunction struct {
 	Returns string `json:"return-type"`
 }
 
-func InitializeProject(sdkName string) error {
+func InitializeFunkConfig(sdkName string) (*FunkConfig, error) {
 	if ok, err := cfg.DoesFileExist(FunkConfigFile); err != nil {
-		return err
+		return nil, err
 	} else if ok {
-		return fmt.Errorf("Unable to intialize proejct, %s config file already exists.", FunkConfigFile)
+		return nil, fmt.Errorf("unable to intialize proejct, %s config file already exists", FunkConfigFile)
 	}
 
 	funkCfg := &FunkConfig{}
 	funkCfg.FunkSDK = sdkName
-	// TODO - valide the SDK choice
-	return cfg.WriteConfigFile(FunkConfigFile, funkCfg)
+	err := cfg.WriteConfigFile(FunkConfigFile, funkCfg)
+	if err != nil {
+		return nil, err
+	}
+	return funkCfg, nil
 }
 
 func LoadFunkConfig() (*FunkConfig, error) {
-	return nil, nil
+	if ok, err := cfg.DoesFileExist(FunkConfigFile); err != nil {
+		return nil, err
+	} else if !ok {
+		return nil, fmt.Errorf("missing expected config file, %s - Not a fun(k) proeject", FunkConfigFile)
+	}
+
+	funkCfg := &FunkConfig{}
+	cfg.LoadConfigFile(FunkConfigFile, funkCfg)
+	return funkCfg, nil
 }

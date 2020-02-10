@@ -4,6 +4,7 @@ require (
 	contrib.go.opencensus.io/exporter/ocagent v0.6.0 // indirect
 	contrib.go.opencensus.io/exporter/prometheus v0.1.0 // indirect
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.9 // indirect
+	github.com/ghodss/yaml v1.0.0
 	github.com/google/go-containerregistry v0.0.0-20190910142231-b02d448a3705 // indirect
 	github.com/magiconair/properties v1.8.0
 	github.com/mattbaird/jsonpatch v0.0.0-20171005235357-81af80346b1a // indirect

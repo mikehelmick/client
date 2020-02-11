@@ -37,7 +37,7 @@ func RunDeploy(w io.Writer, sdk *SdkStatus) error {
 	// For prototype purposes, it's the same spec. Needs some thought.
 	fmt.Fprintf(w, "Using SDK: %s deploy plans\n", sdk.SdkName)
 	for _, step := range deployPlan.Spec.Steps {
-		fmt.Fprintf(w, " ♫ %s\n", step.Name)
+		fmt.Fprintf(w, " 🚀 %s\n", step.Name)
 		if step.Mkdir != "" {
 			createDir, err := template.InterpretString(step.Mkdir, data)
 			err = os.MkdirAll(createDir, os.ModePerm)

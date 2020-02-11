@@ -97,7 +97,7 @@ func RunTypeGen(w io.Writer,
 	}
 
 	fmt.Fprintf(w, "Using SDK: %s\n", sdk.SdkName)
-	fmt.Fprintf(w, " ♫ Checking known EventType definitions...\n")
+	fmt.Fprintf(w, " 🚀 Checking known EventType definitions...\n")
 	typeIdx := -1
 	for i, eType := range eventTypes.Items {
 		if eType.Spec.Type == fType.CEType {
@@ -108,11 +108,11 @@ func RunTypeGen(w io.Writer,
 	if typeIdx < 0 {
 		return fmt.Errorf("unable to find EventType record on cluster for CloudEvent type of '%s'", fType.CEType)
 	}
-	fmt.Fprintf(w, " ♫ Found EventType for type %s\n", fType.CEType)
+	fmt.Fprintf(w, " 🚀 Found EventType for type %s\n", fType.CEType)
 
 	eType := eventTypes.Items[typeIdx]
 	schemaURL := eType.Spec.Schema
-	fmt.Fprintf(w, " ♫ Downloading schema from %s\n", schemaURL)
+	fmt.Fprintf(w, " 🚀 Downloading schema from %s\n", schemaURL)
 	var schema jsonschema.Type
 	downloadSchema(schemaURL, &schema)
 
@@ -157,7 +157,7 @@ func RunTypeGen(w io.Writer,
 	fType.CEType = eType.Spec.Type
 	fType.SourceFile = outFile
 
-	fmt.Fprintf(w, " ♫ Generating source file %s\n", outFile)
+	fmt.Fprintf(w, " 🚀 Generating source file %s\n", outFile)
 	tFile := fmt.Sprintf("%s/%s", sdk.Dir, typeDef.Spec.File.Source)
 	err = template.RenderTemplate(tFile, outFile, data)
 	if err != nil {

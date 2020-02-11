@@ -35,7 +35,7 @@ func RunSDKInit(w io.Writer, sdk *SdkStatus) error {
 	fmt.Fprintf(w, "Using SDK: %s\n", sdkInit.Name)
 	// Execute steps
 	for _, step := range sdkInit.Spec.Steps {
-		fmt.Fprintf(w, " ♫ %s\n", step.Name)
+		fmt.Fprintf(w, " 🚀 %s\n", step.Name)
 		if step.Mkdir != "" {
 			err = os.MkdirAll(step.Mkdir, os.ModePerm)
 			if err != nil {

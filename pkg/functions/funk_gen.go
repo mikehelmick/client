@@ -47,7 +47,7 @@ func RunFunctionGen(
 	// For prototype purposes, it's the same spec. Needs some thought.
 	fmt.Fprintf(w, "Using SDK: %s to Generate Function %s\n", sdk.SdkName, funkFunction.Name)
 	for _, step := range genPlan.Spec.Steps {
-		fmt.Fprintf(w, " ♫ %s\n", step.Name)
+		fmt.Fprintf(w, " 🚀 %s\n", step.Name)
 		if step.Mkdir != "" {
 			createDir, err := template.InterpretString(step.Mkdir, data)
 			err = os.MkdirAll(createDir, os.ModePerm)

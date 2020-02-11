@@ -27,6 +27,7 @@ kn funk [flags]
 ### SEE ALSO
 
 * [kn](kn.md)	 - Knative client
+* [kn funk deploy](kn_funk_deploy.md)	 - Deploys a fun(k) project
 * [kn funk function](kn_funk_function.md)	 - Creates, lists, and deploys functions.
 * [kn funk init](kn_funk_init.md)	 - Initialize a functions project for a programming language in the current directory
 * [kn funk languages](kn_funk_languages.md)	 - Manage fun(k) installed language SDKs

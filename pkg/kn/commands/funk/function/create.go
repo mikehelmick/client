@@ -16,7 +16,6 @@ package function
 
 import (
 	"fmt"
-	"log"
 
 	"github.com/spf13/cobra"
 	"knative.dev/client/pkg/functions"
@@ -81,7 +80,6 @@ func NewFunctionCreateCommand(p *commands.KnParams) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			log.Printf("Function: %v", funkFunction)
 
 			// Maybe generate types
 			inType, err := funkCfg.AddType(createFlags.Type)

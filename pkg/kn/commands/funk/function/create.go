@@ -81,32 +81,39 @@ func NewFunctionCreateCommand(p *commands.KnParams) *cobra.Command {
 				return err
 			}
 
-			// Maybe generate types
-			inType, err := funkCfg.AddType(createFlags.Type)
-			if err != nil {
-				return err
-			}
-			outType, err := funkCfg.AddType(createFlags.ReplyType)
-			if err != nil {
-				return err
-			}
-			funkFunction.Type = createFlags.Type
-			funkFunction.Returns = createFlags.ReplyType
-			inTypeData := make(map[string]interface{})
-			err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, inType, eventTypeList, inTypeData)
-			if err != nil {
-				return err
-			}
-			outTypeData := make(map[string]interface{})
-			err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, outType, eventTypeList, outTypeData)
-			if err != nil {
-				return err
-			}
+			if createFlags.HTTPFunc {
+				err = functions.RunHTTPFunctionGen(cmd.OutOrStdout(), sdk, funkFunction)
+				if err != nil {
+					return err
+				}
+			} else {
+				// Maybe generate types
+				inType, err := funkCfg.AddType(createFlags.Type)
+				if err != nil {
+					return err
+				}
+				outType, err := funkCfg.AddType(createFlags.ReplyType)
+				if err != nil {
+					return err
+				}
+				funkFunction.Type = createFlags.Type
+				funkFunction.Returns = createFlags.ReplyType
+				inTypeData := make(map[string]interface{})
+				err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, inType, eventTypeList, inTypeData)
+				if err != nil {
+					return err
+				}
+				outTypeData := make(map[string]interface{})
+				err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, outType, eventTypeList, outTypeData)
+				if err != nil {
+					return err
+				}
 
-			// Actually generate the function.
-			err = functions.RunFunctionGen(cmd.OutOrStdout(), sdk, funkFunction, inTypeData, outTypeData)
-			if err != nil {
-				return err
+				// Actually generate the function.
+				err = functions.RunFunctionGen(cmd.OutOrStdout(), sdk, funkFunction, inTypeData, outTypeData)
+				if err != nil {
+					return err
+				}
 			}
 
 			// Write the modified funk config back out

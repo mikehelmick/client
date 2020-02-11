@@ -21,9 +21,24 @@ import (
 	"os/exec"
 	"strings"
 
+	"knative.dev/client/pkg/apis/funk/v1alpha1"
 	"knative.dev/client/pkg/functions/sdks"
 	"knative.dev/client/pkg/functions/template"
 )
+
+func RunHTTPFunctionGen(w io.Writer, sdk *SdkStatus, funkFunction *FunkFunction) error {
+	genFile := fmt.Sprintf("%s%s", sdk.Dir, "httpfunk.yaml")
+	genPlan, err := sdks.LoadSDKInit(genFile)
+	if err != nil {
+		return err
+	}
+
+	data := make(map[string]interface{})
+	data["FunkName"] = funkFunction.Name
+	data["LowerFunkName"] = strings.ToLower(funkFunction.Name)
+
+	return commonGeneration(w, sdk, funkFunction, genPlan, data)
+}
 
 func RunFunctionGen(
 	w io.Writer,
@@ -43,6 +58,10 @@ func RunFunctionGen(
 	data["FunkName"] = funkFunction.Name
 	data["LowerFunkName"] = strings.ToLower(funkFunction.Name)
 
+	return commonGeneration(w, sdk, funkFunction, genPlan, data)
+}
+
+func commonGeneration(w io.Writer, sdk *SdkStatus, funkFunction *FunkFunction, genPlan *v1alpha1.SDKInit, data map[string]interface{}) error {
 	// TODO - this is a copy of the init code.
 	// For prototype purposes, it's the same spec. Needs some thought.
 	fmt.Fprintf(w, "Using SDK: %s to Generate Function %s\n", sdk.SdkName, funkFunction.Name)
@@ -87,6 +106,5 @@ func RunFunctionGen(
 			return fmt.Errorf("invalid config step '%s' - no command specified", step.Name)
 		}
 	}
-
 	return nil
 }

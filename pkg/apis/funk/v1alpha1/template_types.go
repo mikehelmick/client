@@ -12,18 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package sdks
+package v1alpha1
 
-import (
-	v1alpha1 "knative.dev/client/pkg/apis/funk/v1alpha1"
-	cfg "knative.dev/client/pkg/cfgfile"
-)
-
-func LoadSDKInit(fName string) (*v1alpha1.SDKInit, error) {
-	sdkInit := &v1alpha1.SDKInit{}
-	err := cfg.LoadYamlFile(fName, sdkInit)
-	if err != nil {
-		return nil, err
-	}
-	return sdkInit, nil
+type Template struct {
+	Source      string `json:"source"`
+	Destination string `json:"dest"`
 }

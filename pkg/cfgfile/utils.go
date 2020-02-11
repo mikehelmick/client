@@ -95,6 +95,12 @@ func WriteConfigFile(file string, contents interface{}) error {
 	if err != nil {
 		return err
 	}
-	ioutil.WriteFile(resolveFileName(file), data, os.ModePerm)
+
+	yamlBytes, err := yaml.JSONToYAML(data)
+	if err != nil {
+		return err
+	}
+
+	ioutil.WriteFile(resolveFileName(file), yamlBytes, os.ModePerm)
 	return nil
 }

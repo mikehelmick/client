@@ -45,7 +45,7 @@ func NewEventTypeListCommand(p *commands.KnParams) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			eventTypeList, err := getEventTypeInfo(args, client)
+			eventTypeList, err := GetEventTypeInfo(args, client)
 			if err != nil {
 				return err
 			}
@@ -87,7 +87,8 @@ func NewEventTypeListCommand(p *commands.KnParams) *cobra.Command {
 	return eventTypeListCommand
 }
 
-func getEventTypeInfo(args []string, client eventingClient.KnEventingClient) (*eventingv1alpha1.EventTypeList, error) {
+// TODO - needs to be moved to common place
+func GetEventTypeInfo(args []string, client eventingClient.KnEventingClient) (*eventingv1alpha1.EventTypeList, error) {
 	var (
 		eventTypeList *eventingv1alpha1.EventTypeList
 		err           error

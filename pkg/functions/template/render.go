@@ -18,9 +18,28 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"strings"
 	"text/template"
 )
 
+// InterpretString executes an in memory string as a text/template.
+func InterpretString(tempString string, data map[string]interface{}) (string, error) {
+	t := template.New("inline")
+	t, err := t.Parse(tempString)
+	if err != nil {
+		return "", err
+	}
+
+	strBuilder := &strings.Builder{}
+	err = t.Execute(strBuilder, data)
+	if err != nil {
+		return "", err
+	}
+	return strBuilder.String(), nil
+}
+
+// RenderTemplate reads a template from from disk, exeuctes it as a
+// text/template and writes the file back to the oFile.
 func RenderTemplate(tFile, oFile string, data map[string]interface{}) error {
 	t, err := template.ParseFiles(tFile)
 	if err != nil {

@@ -25,7 +25,7 @@ import (
 	"knative.dev/client/pkg/functions/template"
 )
 
-func RunSDKInit(w io.Writer, sdk SdkStatus) error {
+func RunSDKInit(w io.Writer, sdk *SdkStatus) error {
 	initFile := fmt.Sprintf("%s%s", sdk.Dir, "init.yaml")
 	sdkInit, err := sdks.LoadSDKInit(initFile)
 	if err != nil {

@@ -15,6 +15,8 @@
 package functions
 
 import (
+	"fmt"
+
 	cfg "knative.dev/client/pkg/cfgfile"
 )
 
@@ -48,11 +50,30 @@ func (c *LanguageConfig) SaveLanguageConfig() error {
 	return cfg.WriteConfigFile(ConfigFileName, c)
 }
 
-func LoadLanguageConfig() (*LanguageConfig, error) {
+func LoadAllLanguageConfig() (*LanguageConfig, error) {
 	config := &LanguageConfig{}
 	err := cfg.LoadConfigFile(ConfigFileName, config)
 	if err != nil {
 		return nil, err
 	}
 	return config, nil
+}
+
+func LoadLanguageConfig(sdkName string) (*SdkStatus, error) {
+	sdkCfg, err := LoadAllLanguageConfig()
+	if err != nil {
+		return nil, err
+	}
+	sdkIdx := -1
+	for i := 0; i < len(sdkCfg.Sdks); i++ {
+		if sdkCfg.Sdks[i].SdkName == sdkName {
+			sdkIdx = i
+			break
+		}
+	}
+	if sdkIdx < 0 {
+		return nil, fmt.Errorf("invalid SDK selected for funk init, %s", sdkName)
+	}
+	sdk := &(sdkCfg.Sdks[sdkIdx])
+	return sdk, nil
 }

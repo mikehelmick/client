@@ -37,7 +37,7 @@ func NewLanguagesListCommand(p *commands.KnParams) *cobra.Command {
 		Use:   "list",
 		Short: "List available fun(k) language SDKs",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			cfg, err := functions.LoadLanguageConfig()
+			cfg, err := functions.LoadAllLanguageConfig()
 			if err != nil {
 				return err
 			}

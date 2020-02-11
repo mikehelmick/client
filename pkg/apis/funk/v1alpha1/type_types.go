@@ -20,22 +20,14 @@ import (
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-type SDKInit struct {
+type Type struct {
 	metav1.TypeMeta `json:",inline"`
 	// +optional
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	// Spec defines the desired state of the Broker.
-	Spec SDKInitSpec `json:"spec,omitempty"`
+	Spec TypeSpec `json:"spec,omitempty"`
 }
 
-type SDKInitSpec struct {
-	Steps []Step `json:"steps"`
-}
-
-type Step struct {
-	Name  string   `json:"name"`
-	Mkdir string   `json:"mkdir,omitempty"`
-	Exec  string   `json:"exec,omitempty"`
-	File  Template `json:"template,omitempty"`
+type TypeSpec struct {
+	File Template `json:"template"`
 }

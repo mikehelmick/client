@@ -16,7 +16,6 @@ package finit
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/spf13/cobra"
 	"knative.dev/client/pkg/functions"
@@ -40,21 +39,10 @@ func NewFunkInitCommand(p *commands.KnParams) *cobra.Command {
 				return err
 			}
 
-			sdkCfg, err := functions.LoadLanguageConfig()
+			sdk, err := functions.LoadLanguageConfig(sdkName)
 			if err != nil {
 				return err
 			}
-			sdkIdx := -1
-			for i := 0; i < len(sdkCfg.Sdks); i++ {
-				if sdkCfg.Sdks[i].SdkName == sdkName {
-					sdkIdx = i
-					break
-				}
-			}
-			if sdkIdx < 0 {
-				return fmt.Errorf("invalid SDK selected for funk init, %s", sdkName)
-			}
-			sdk := sdkCfg.Sdks[sdkIdx]
 
 			// The initialized config may be useful here later.
 			_, err = functions.InitializeFunkConfig(sdkName)

@@ -12,25 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package funk
+package function
 
 import (
 	"github.com/spf13/cobra"
 	"knative.dev/client/pkg/kn/commands"
-	"knative.dev/client/pkg/kn/commands/funk/finit"
-	"knative.dev/client/pkg/kn/commands/funk/function"
-	"knative.dev/client/pkg/kn/commands/funk/languages"
-	"knative.dev/client/pkg/kn/commands/funk/types"
 )
 
-func NewFunkCommand(p *commands.KnParams) *cobra.Command {
-	funkCmd := &cobra.Command{
-		Use:   "funk",
-		Short: "Functions command group",
+var example = `
+ # List all functions
+ kn funk function list
+
+ # Create a function
+ kn funk create [funcName] -t [CloudEvent Type]
+`
+
+func NewFunkFunctionCommand(p *commands.KnParams) *cobra.Command {
+	functionCommand := &cobra.Command{
+		Use:     "function",
+		Short:   "Creates, lists, and deploys functions.",
+		Example: example,
 	}
-	funkCmd.AddCommand(languages.NewFunkLanguagesCommand(p))
-	funkCmd.AddCommand(finit.NewFunkInitCommand(p))
-	funkCmd.AddCommand(function.NewFunkFunctionCommand(p))
-	funkCmd.AddCommand(types.NewEventTypeListCommand(p))
-	return funkCmd
+	functionCommand.AddCommand(NewFunctionCreateCommand(p))
+	return functionCommand
 }

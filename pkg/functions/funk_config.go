@@ -24,18 +24,61 @@ import (
 // up the directory hierarchy looking for a we funk file.
 const FunkConfigFile = "we.funk"
 
+// TODO - move this into the v1alpha1 API group, treat as other
+// SDK files.
 type FunkConfig struct {
 	FunkSDK   string   `json:"funk-sdk"`
-	Functions FunkList `json:"funks"`
+	Functions FunkList `json:"funks,omitempty"`
+	Types     TypeList `json:"types,omitempty"`
 }
 
 type FunkList []FunkFunction
 
 type FunkFunction struct {
 	Name    string `json:"name"`
-	Source  string `json:"source"`
-	Type    string `json:"type"`
-	Returns string `json:"return-type"`
+	Source  string `json:"source,omitempty"`
+	Type    string `json:"type,omitempty"`
+	Returns string `json:"return-type,omitempty"`
+}
+
+type TypeList []FunkType
+
+type FunkType struct {
+	CEType     string `json:"cetype"`
+	SourceFile string `json:"source-file"`
+}
+
+func (f *FunkConfig) AddFunction(funkName string) (*FunkFunction, error) {
+	// Check that name isn't used alread
+	for _, fun := range f.Functions {
+		if fun.Name == funkName {
+			return nil, fmt.Errorf("function with name '%s' already exists", funkName)
+		}
+	}
+
+	newFun := FunkFunction{Name: funkName}
+	f.Functions = append(f.Functions, newFun)
+	return &f.Functions[len(f.Functions)-1], nil
+}
+
+func (f *FunkConfig) AddType(typeName string) (*FunkType, error) {
+	if typeName == "" {
+		return nil, nil
+	}
+	// Check that name isn't used alread
+	for _, fType := range f.Types {
+		if fType.CEType == typeName {
+			return nil, fmt.Errorf("ce-type with name '%s' already exists", typeName)
+		}
+	}
+
+	newType := FunkType{CEType: typeName}
+	f.Types = append(f.Types, newType)
+	return &f.Types[len(f.Types)-1], nil
+}
+
+func (f *FunkConfig) Save() error {
+	return cfg.WriteConfigFile(FunkConfigFile, f)
 }
 
 func InitializeFunkConfig(sdkName string) (*FunkConfig, error) {
@@ -62,6 +105,6 @@ func LoadFunkConfig() (*FunkConfig, error) {
 	}
 
 	funkCfg := &FunkConfig{}
-	cfg.LoadConfigFile(FunkConfigFile, funkCfg)
+	cfg.LoadYamlFile(FunkConfigFile, funkCfg)
 	return funkCfg, nil
 }

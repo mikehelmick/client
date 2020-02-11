@@ -18,7 +18,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"strings"
@@ -150,7 +149,6 @@ func RunTypeGen(w io.Writer,
 		required[req] = true
 	}
 	fields := processFields(schema, required)
-	log.Printf("Fields %v", fields)
 	data["StructFields"] = fields
 	data["CEType"] = eType.Spec.Type
 	data["CESource"] = eType.Spec.Source

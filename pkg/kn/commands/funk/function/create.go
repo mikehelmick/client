@@ -92,6 +92,8 @@ func NewFunctionCreateCommand(p *commands.KnParams) *cobra.Command {
 			if err != nil {
 				return err
 			}
+			funkFunction.Type = createFlags.Type
+			funkFunction.Returns = createFlags.ReplyType
 			inTypeData := make(map[string]interface{})
 			err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, inType, eventTypeList, inTypeData)
 			if err != nil {
@@ -99,6 +101,12 @@ func NewFunctionCreateCommand(p *commands.KnParams) *cobra.Command {
 			}
 			outTypeData := make(map[string]interface{})
 			err = functions.RunTypeGen(cmd.OutOrStdout(), sdk, outType, eventTypeList, outTypeData)
+			if err != nil {
+				return err
+			}
+
+			// Actually generate the function.
+			err = functions.RunFunctionGen(cmd.OutOrStdout(), sdk, funkFunction, inTypeData, outTypeData)
 			if err != nil {
 				return err
 			}

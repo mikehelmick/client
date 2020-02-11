@@ -25,19 +25,32 @@ import (
 	"knative.dev/client/pkg/functions/template"
 )
 
-func RunSDKInit(w io.Writer, sdk *SdkStatus) error {
-	initFile := fmt.Sprintf("%s%s", sdk.Dir, "init.yaml")
-	sdkInit, err := sdks.LoadSDKInit(initFile)
+func RunFunctionGen(
+	w io.Writer,
+	sdk *SdkStatus,
+	funkFunction *FunkFunction,
+	inTypeData, outTypeData map[string]interface{}) error {
+
+	genFile := fmt.Sprintf("%s%s", sdk.Dir, "funk.yaml")
+	genPlan, err := sdks.LoadSDKInit(genFile)
 	if err != nil {
 		return err
 	}
 
-	fmt.Fprintf(w, "Using SDK: %s\n", sdkInit.Name)
-	// Execute steps
-	for _, step := range sdkInit.Spec.Steps {
+	data := make(map[string]interface{})
+	data["InType"] = inTypeData
+	data["OutType"] = outTypeData
+	data["FunkName"] = funkFunction.Name
+	data["LowerFunkName"] = strings.ToLower(funkFunction.Name)
+
+	// TODO - this is a copy of the init code.
+	// For prototype purposes, it's the same spec. Needs some thought.
+	fmt.Fprintf(w, "Using SDK: %s to Generate Function %s\n", sdk.SdkName, funkFunction.Name)
+	for _, step := range genPlan.Spec.Steps {
 		fmt.Fprintf(w, " ♫ %s\n", step.Name)
 		if step.Mkdir != "" {
-			err = os.MkdirAll(step.Mkdir, os.ModePerm)
+			createDir, err := template.InterpretString(step.Mkdir, data)
+			err = os.MkdirAll(createDir, os.ModePerm)
 			if err != nil {
 				return err
 			}
@@ -61,10 +74,12 @@ func RunSDKInit(w io.Writer, sdk *SdkStatus) error {
 				return err
 			}
 		} else if step.File.Source != "" {
-			data := make(map[string]interface{})
-			data["SDKName"] = sdkInit.Name
 			sourceFile := fmt.Sprintf("%s/%s", sdk.Dir, step.File.Source)
-			err = template.RenderTemplate(sourceFile, step.File.Destination, data)
+			outFile, err := template.InterpretString(step.File.Destination, data)
+			if err != nil {
+				return err
+			}
+			err = template.RenderTemplate(sourceFile, outFile, data)
 			if err != nil {
 				return err
 			}

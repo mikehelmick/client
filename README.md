@@ -72,6 +72,8 @@ To generate an HTTP function
 takes events from off cluster and puts them on the specified broker.
 2. https://github.com/mikehelmick/eventutils - The first cut of code generation
   * the cmd/typegen program can be used to generate schemas from Go types
+  * the cmd/generate program can be used to generate Clients and Functions
+    (this is the basis for fun(k))
 
 # Knative Client
 

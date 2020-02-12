@@ -1,0 +1,11 @@
+apiVersion: eventing.knative.dev/v1alpha1
+kind: EventType
+metadata:
+  creationTimestamp: null
+  name: com.mikehelmick.eventutils.user.user
+  namespace: default
+spec:
+  broker: default
+  schema: https://schemas.in-the-cloud.dev/download/com.mikehelmick.eventutils.user.user.json
+  source: com.mikehelmick.example.login
+  type: com.mikehelmick.eventutils.user.user

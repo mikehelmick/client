@@ -1,0 +1,16 @@
+{
+  "funk-sdk-version": 0.1,
+  "sdks": [
+    {"sdk-name": "go",
+     "language-version": "1.13",
+     "sdk-version": 0.1,
+     "installed": true,
+     "origin": "http://blah",
+     "dir": "/Users/helmick/go/src/knative.dev/funk-sdk-go/"
+    },
+    {"sdk-name": "nodejs-13",
+     "sdk-version": 0.1,
+     "installed": false
+    }
+  ]
+}

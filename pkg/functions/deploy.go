@@ -21,6 +21,7 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/gobuffalo/packr"
 	"knative.dev/client/pkg/functions/sdks"
 	"knative.dev/client/pkg/functions/template"
 )
@@ -45,22 +46,7 @@ func RunDeploy(w io.Writer, sdk *SdkStatus) error {
 				return err
 			}
 		} else if step.Exec != "" {
-			parts := strings.Split(step.Exec, " ")
-			path, err := exec.LookPath(parts[0])
-			if err != nil {
-				return err
-			}
-			args := make([]string, 0)
-			if len(parts) > 0 {
-				args = parts[1:]
-			}
-
-			cmd := exec.Command(path, args...)
-			cmd.Env = os.Environ()
-			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			if err := cmd.Run(); err != nil {
+			if err := runCommand(step.Exec); err != nil {
 				return err
 			}
 		} else if step.File.Source != "" {
@@ -73,10 +59,62 @@ func RunDeploy(w io.Writer, sdk *SdkStatus) error {
 			if err != nil {
 				return err
 			}
+		} else if step.Build.Builder != "" {
+			if step.Build.Destination == "" {
+				return fmt.Errorf("Please provide a destination for the build image.")
+			}
+			if step.Build.MainPath == "" {
+				return fmt.Errorf("Please provide the relative path to the main file.")
+			}
+			// TODO(shefaliv): remove the GOOGLE_BUILDABLE dependency
+			packCommand := fmt.Sprintf("pack build %s --builder %s --env GOOGLE_BUILDABLE=%s --publish", step.Build.Destination, step.Build.Builder, step.Build.MainPath)
+			if err := runCommand(packCommand); err != nil {
+				return err
+			}
+
+			data := make(map[string]interface{})
+			data["MetadataName"] = deployPlan.ObjectMeta.Name
+			data["Image"] = step.Build.Destination
+			box := packr.NewBox("./template")
+			sourceFile, err := box.FindString("service.yaml.tmpl")
+			if err != nil {
+				return err
+			}
+
+			err = template.RenderTemplateFromContents(sourceFile, "service.yaml", data)
+
+			kubectlCommand := fmt.Sprintf("kubectl apply -f %s", "service.yaml")
+			if err := runCommand(kubectlCommand); err != nil {
+				return err
+			}
+
+			// TODO(shefaliv): Also deploy trigger.
 		} else {
 			return fmt.Errorf("invalid config step '%s' - no command specified", step.Name)
 		}
 	}
 
+	return nil
+}
+
+func runCommand(command string) error {
+	parts := strings.Split(command, " ")
+	path, err := exec.LookPath(parts[0])
+	if err != nil {
+		return err
+	}
+	args := make([]string, 0)
+	if len(parts) > 0 {
+		args = parts[1:]
+	}
+
+	cmd := exec.Command(path, args...)
+	cmd.Env = os.Environ()
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	if err := cmd.Run(); err != nil {
+		return err
+	}
 	return nil
 }

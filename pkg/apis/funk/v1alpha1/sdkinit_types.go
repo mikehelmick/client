@@ -34,8 +34,9 @@ type SDKInitSpec struct {
 }
 
 type Step struct {
-	Name  string   `json:"name"`
-	Mkdir string   `json:"mkdir,omitempty"`
-	Exec  string   `json:"exec,omitempty"`
-	File  Template `json:"template,omitempty"`
+	Name  string    `json:"name"`
+	Mkdir string    `json:"mkdir,omitempty"`
+	Exec  string    `json:"exec,omitempty"`
+	File  Template  `json:"template,omitempty"`
+	Build BuildInfo `json:"build,omitempty"`
 }

@@ -6,6 +6,7 @@ require (
 	contrib.go.opencensus.io/exporter/stackdriver v0.12.9 // indirect
 	github.com/alecthomas/jsonschema v0.0.0-20200210115347-d65fe469b048
 	github.com/ghodss/yaml v1.0.0
+	github.com/gobuffalo/packr v1.30.1
 	github.com/google/go-containerregistry v0.0.0-20190910142231-b02d448a3705 // indirect
 	github.com/iancoleman/orderedmap v0.0.0-20190318233801-ac98e3ecb4b0
 	github.com/magiconair/properties v1.8.0

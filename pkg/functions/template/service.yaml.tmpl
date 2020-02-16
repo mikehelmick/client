@@ -1,0 +1,10 @@
+apiVersion: serving.knative.dev/v1 # Current version of Knative
+kind: Service
+metadata:
+  name: {{.MetadataName}}
+  namespace: default
+spec:
+  template:
+    spec:
+      containers:
+        - image: {{.Image}}

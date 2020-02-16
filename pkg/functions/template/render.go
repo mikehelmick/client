@@ -38,13 +38,28 @@ func InterpretString(tempString string, data map[string]interface{}) (string, er
 	return strBuilder.String(), nil
 }
 
-// RenderTemplate reads a template from from disk, exeuctes it as a
+// RenderTemplateFromContents takes in template contents as a string, executes it as a
+// text/template and writes the file back to the oFile.
+func RenderTemplateFromContents(tmplStr, oFile string, data map[string]interface{}) error {
+	t := template.New("inline")
+	t, err := t.Parse(tmplStr)
+	if err != nil {
+		return err
+	}
+	return renderTemplate(t, oFile, data)
+}
+
+// RenderTemplate reads a template from from disk, executes it as a
 // text/template and writes the file back to the oFile.
 func RenderTemplate(tFile, oFile string, data map[string]interface{}) error {
 	t, err := template.ParseFiles(tFile)
 	if err != nil {
 		return fmt.Errorf("Unable to load template %s : %v", tFile, err)
 	}
+	return renderTemplate(t, oFile, data)
+}
+
+func renderTemplate(t *template.Template, oFile string, data map[string]interface{}) error {
 	f, err := os.Create(oFile)
 	if err != nil {
 		return fmt.Errorf("Unable to create file %s : %v", oFile, err)

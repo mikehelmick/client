@@ -32,7 +32,7 @@ import (
 
 // StructField is used to genreate go types.
 type StructField struct {
-	Name, FieldType, Tags string
+	SchemaName, Name, FieldType, Tags string
 }
 
 func downloadSchema(schemaURL string, schema *jsonschema.Type) error {
@@ -73,7 +73,7 @@ func processFields(schema jsonschema.Type, required map[string]bool) []StructFie
 		}
 		tags := fmt.Sprintf("`json:\"%s%s\"`", prop, extra)
 
-		rtn = append(rtn, StructField{name, fieldType, tags})
+		rtn = append(rtn, StructField{prop, name, fieldType, tags})
 	}
 
 	return rtn

@@ -121,6 +121,7 @@ func RunTypeGen(w io.Writer,
 	typeName := path[len(path)-1]
 	path = path[0 : len(path)-1]
 	data["Path"] = strings.Join(path, "/")
+	data["PathDots"] = strings.Join(path, ".")
 	data["LastPart"] = path[len(path)-1]
 	data["TypeName"] = typeName
 	data["UpCaseTypeName"] = fmt.Sprintf("%s%s", strings.ToUpper(typeName[0:1]), strings.ToLower(typeName[1:]))

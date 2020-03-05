@@ -74,7 +74,8 @@ func commonGeneration(w io.Writer, sdk *SdkStatus, funkFunction *FunkFunction, g
 				return err
 			}
 		} else if step.Exec != "" {
-			parts := strings.Split(step.Exec, " ")
+			execStep, _ := template.InterpretString(step.Exec, data)
+			parts := strings.Split(execStep, " ")
 			path, err := exec.LookPath(parts[0])
 			if err != nil {
 				return err

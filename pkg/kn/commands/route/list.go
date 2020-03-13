@@ -19,11 +19,12 @@ import (
 	"fmt"
 
 	"knative.dev/client/pkg/kn/commands"
-	v1alpha12 "knative.dev/client/pkg/serving/v1alpha1"
+	clientservingv1 "knative.dev/client/pkg/serving/v1"
 
 	"github.com/spf13/cobra"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+
 	"knative.dev/client/pkg/kn/commands/flags"
-	"knative.dev/serving/pkg/apis/serving/v1alpha1"
 )
 
 // NewrouteListCommand represents 'kn route list' command
@@ -39,7 +40,7 @@ func NewRouteListCommand(p *commands.KnParams) *cobra.Command {
   # List route 'web' in namespace 'dev'
   kn route list web -n dev
 
-  # List all routes in yaml format
+  # List all routes in YAML format
   kn route list -o yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 
@@ -52,12 +53,12 @@ func NewRouteListCommand(p *commands.KnParams) *cobra.Command {
 				return err
 			}
 
-			var routeList *v1alpha1.RouteList
+			var routeList *servingv1.RouteList
 			switch len(args) {
 			case 0:
 				routeList, err = client.ListRoutes()
 			case 1:
-				routeList, err = client.ListRoutes(v1alpha12.WithName(args[0]))
+				routeList, err = client.ListRoutes(clientservingv1.WithName(args[0]))
 			default:
 				return errors.New("'kn route list' accepts only one additional argument")
 			}

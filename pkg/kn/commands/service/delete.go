@@ -17,13 +17,17 @@ package service
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/spf13/cobra"
+
 	"knative.dev/client/pkg/kn/commands"
 )
 
 // NewServiceDeleteCommand represent 'service delete' command
 func NewServiceDeleteCommand(p *commands.KnParams) *cobra.Command {
+	var waitFlags commands.WaitFlags
+
 	serviceDeleteCommand := &cobra.Command{
 		Use:   "delete NAME",
 		Short: "Delete a service.",
@@ -47,9 +51,12 @@ func NewServiceDeleteCommand(p *commands.KnParams) *cobra.Command {
 			if err != nil {
 				return err
 			}
-
 			for _, name := range args {
-				err = client.DeleteService(name)
+				timeout := time.Duration(0)
+				if !waitFlags.NoWait {
+					timeout = time.Duration(waitFlags.TimeoutInSeconds) * time.Second
+				}
+				err = client.DeleteService(name, timeout)
 				if err != nil {
 					fmt.Fprintf(cmd.OutOrStdout(), "%s.\n", err)
 				} else {
@@ -60,5 +67,6 @@ func NewServiceDeleteCommand(p *commands.KnParams) *cobra.Command {
 		},
 	}
 	commands.AddNamespaceFlags(serviceDeleteCommand.Flags(), false)
+	waitFlags.AddConditionWaitFlags(serviceDeleteCommand, commands.WaitDefaultTimeout, "Delete", "service", "deleted")
 	return serviceDeleteCommand
 }

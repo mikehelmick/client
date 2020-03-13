@@ -17,7 +17,6 @@ package trigger
 import (
 	"bytes"
 
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/tools/clientcmd"
 	"knative.dev/eventing/pkg/apis/eventing/v1alpha1"
 	"knative.dev/pkg/apis"
@@ -85,6 +84,11 @@ func createTrigger(namespace string, name string, filters map[string]string, bro
 		Build()
 }
 
+func createTriggerWithInject(namespace string, name string, filters map[string]string, broker string, svcname string) *v1alpha1.Trigger {
+	t := createTrigger(namespace, name, filters, broker, svcname)
+	return eventc_v1alpha1.NewTriggerBuilderFromExisting(t).InjectBroker(true).Build()
+}
+
 func createTriggerWithStatus(namespace string, name string, filters map[string]string, broker string, svcname string) *v1alpha1.Trigger {
 	wanted := createTrigger(namespace, name, filters, broker, svcname)
 	wanted.Status = v1alpha1.TriggerStatus{
@@ -101,6 +105,6 @@ func createTriggerWithStatus(namespace string, name string, filters map[string]s
 
 func createServiceSink(service string) *duckv1.Destination {
 	return &duckv1.Destination{
-		Ref: &corev1.ObjectReference{Name: service, Kind: "Service", APIVersion: "serving.knative.dev/v1alpha1", Namespace: "default"},
+		Ref: &duckv1.KReference{Name: service, Kind: "Service", APIVersion: "serving.knative.dev/v1", Namespace: "default"},
 	}
 }

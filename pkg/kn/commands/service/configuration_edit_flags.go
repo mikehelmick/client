@@ -20,17 +20,21 @@ import (
 
 	"github.com/pkg/errors"
 	"github.com/spf13/cobra"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"knative.dev/client/pkg/kn/flags"
 	servinglib "knative.dev/client/pkg/serving"
 	"knative.dev/client/pkg/util"
-	servingv1alpha1 "knative.dev/serving/pkg/apis/serving/v1alpha1"
+	"knative.dev/serving/pkg/apis/serving"
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
 )
 
 type ConfigurationEditFlags struct {
 	// Direct field manipulation
-	Image   string
+	Image   uniqueStringArg
 	Env     []string
 	EnvFrom []string
 	Mount   []string
@@ -47,11 +51,15 @@ type ConfigurationEditFlags struct {
 	AutoscaleWindow            string
 	Port                       int32
 	Labels                     []string
+	LabelsService              []string
+	LabelsRevision             []string
 	NamePrefix                 string
 	RevisionName               string
 	ServiceAccountName         string
 	ImagePullSecrets           string
 	Annotations                []string
+	ClusterLocal               bool
+	User                       int64
 
 	// Preferences about how to do the action.
 	LockToDigest         bool
@@ -67,6 +75,25 @@ type ResourceFlags struct {
 	Memory string
 }
 
+// -- uniqueStringArg Value
+// Custom implementation of flag.Value interface to prevent multiple value assignment.
+// Useful to enforce unique use of flags, e.g. --image.
+type uniqueStringArg string
+
+func (s *uniqueStringArg) Set(val string) error {
+	if len(*s) > 0 {
+		return errors.New("can be provided only once")
+	}
+	*s = uniqueStringArg(val)
+	return nil
+}
+
+func (s *uniqueStringArg) Type() string {
+	return "string"
+}
+
+func (s *uniqueStringArg) String() string { return string(*s) }
+
 // markFlagMakesRevision indicates that a flag will create a new revision if you
 // set it.
 func (p *ConfigurationEditFlags) markFlagMakesRevision(f string) {
@@ -75,7 +102,7 @@ func (p *ConfigurationEditFlags) markFlagMakesRevision(f string) {
 
 // addSharedFlags adds the flags common between create & update.
 func (p *ConfigurationEditFlags) addSharedFlags(command *cobra.Command) {
-	command.Flags().StringVar(&p.Image, "image", "", "Image to run.")
+	command.Flags().VarP(&p.Image, "image", "", "Image to run.")
 	p.markFlagMakesRevision("image")
 	command.Flags().StringArrayVarP(&p.Env, "env", "e", []string{},
 		"Environment variable to set. NAME=value; you may provide this flag "+
@@ -109,6 +136,7 @@ func (p *ConfigurationEditFlags) addSharedFlags(command *cobra.Command) {
 		"Specify command to be used as entrypoint instead of default one. "+
 			"Example: --cmd /app/start or --cmd /app/start --arg myArg to pass aditional arguments.")
 	p.markFlagMakesRevision("cmd")
+
 	command.Flags().StringArrayVarP(&p.Arg, "arg", "", []string{},
 		"Add argument to the container command. "+
 			"Example: --arg myArg1 --arg --myArg2 --arg myArg3=3. "+
@@ -117,33 +145,63 @@ func (p *ConfigurationEditFlags) addSharedFlags(command *cobra.Command) {
 
 	command.Flags().StringVar(&p.RequestsFlags.CPU, "requests-cpu", "", "The requested CPU (e.g., 250m).")
 	p.markFlagMakesRevision("requests-cpu")
+
 	command.Flags().StringVar(&p.RequestsFlags.Memory, "requests-memory", "", "The requested memory (e.g., 64Mi).")
 	p.markFlagMakesRevision("requests-memory")
+
 	command.Flags().StringVar(&p.LimitsFlags.CPU, "limits-cpu", "", "The limits on the requested CPU (e.g., 1000m).")
 	p.markFlagMakesRevision("limits-cpu")
+
 	command.Flags().StringVar(&p.LimitsFlags.Memory, "limits-memory", "",
 		"The limits on the requested memory (e.g., 1024Mi).")
 	p.markFlagMakesRevision("limits-memory")
+
 	command.Flags().IntVar(&p.MinScale, "min-scale", 0, "Minimal number of replicas.")
 	p.markFlagMakesRevision("min-scale")
+
 	command.Flags().IntVar(&p.MaxScale, "max-scale", 0, "Maximal number of replicas.")
 	p.markFlagMakesRevision("max-scale")
+
 	command.Flags().StringVar(&p.AutoscaleWindow, "autoscale-window", "", "Duration to look back for making auto-scaling decisions. The service is scaled to zero if no request was received in during that time. (eg: 10s)")
 	p.markFlagMakesRevision("autoscale-window")
+
+	flags.AddBothBoolFlagsUnhidden(command.Flags(), &p.ClusterLocal, "cluster-local", "", false,
+		"Specify that the service be private. (--no-cluster-local will make the service publicly available)")
+	//TODO: Need to also not change revision when already set (solution to issue #646)
+	p.markFlagMakesRevision("cluster-local")
+	p.markFlagMakesRevision("no-cluster-local")
+
 	command.Flags().IntVar(&p.ConcurrencyTarget, "concurrency-target", 0,
 		"Recommendation for when to scale up based on the concurrent number of incoming request. "+
 			"Defaults to --concurrency-limit when given.")
 	p.markFlagMakesRevision("concurrency-target")
+
 	command.Flags().IntVar(&p.ConcurrencyLimit, "concurrency-limit", 0,
 		"Hard Limit of concurrent requests to be processed by a single replica.")
 	p.markFlagMakesRevision("concurrency-limit")
+
 	command.Flags().Int32VarP(&p.Port, "port", "p", 0, "The port where application listens on.")
 	p.markFlagMakesRevision("port")
+
 	command.Flags().StringArrayVarP(&p.Labels, "label", "l", []string{},
-		"Service label to set. name=value; you may provide this flag "+
+		"Labels to set for both Service and Revision. name=value; you may provide this flag "+
 			"any number of times to set multiple labels. "+
 			"To unset, specify the label name followed by a \"-\" (e.g., name-).")
 	p.markFlagMakesRevision("label")
+
+	command.Flags().StringArrayVarP(&p.LabelsService, "label-service", "", []string{},
+		"Service label to set. name=value; you may provide this flag "+
+			"any number of times to set multiple labels. "+
+			"To unset, specify the label name followed by a \"-\" (e.g., name-). This flag takes "+
+			"precedence over \"label\" flag.")
+	p.markFlagMakesRevision("label-service")
+	command.Flags().StringArrayVarP(&p.LabelsRevision, "label-revision", "", []string{},
+		"Revision label to set. name=value; you may provide this flag "+
+			"any number of times to set multiple labels. "+
+			"To unset, specify the label name followed by a \"-\" (e.g., name-). This flag takes "+
+			"precedence over \"label\" flag.")
+	p.markFlagMakesRevision("label-revision")
+
 	command.Flags().StringVar(&p.RevisionName, "revision-name", "{{.Service}}-{{.Random 5}}-{{.Generation}}",
 		"The revision name to set. Must start with the service name and a dash as a prefix. "+
 			"Empty revision name will result in the server generating a name for the revision. "+
@@ -152,24 +210,29 @@ func (p *ConfigurationEditFlags) addSharedFlags(command *cobra.Command) {
 	p.markFlagMakesRevision("revision-name")
 
 	flags.AddBothBoolFlagsUnhidden(command.Flags(), &p.LockToDigest, "lock-to-digest", "", true,
-		"keep the running image for the service constant when not explicitly specifying "+
+		"Keep the running image for the service constant when not explicitly specifying "+
 			"the image. (--no-lock-to-digest pulls the image tag afresh with each new revision)")
 	// Don't mark as changing the revision.
+
 	command.Flags().StringVar(&p.ServiceAccountName,
 		"service-account",
 		"",
 		"Service account name to set. An empty argument (\"\") clears the service account. The referenced service account must exist in the service's namespace.")
 	p.markFlagMakesRevision("service-account")
+
 	command.Flags().StringArrayVar(&p.Annotations, "annotation", []string{},
 		"Service annotation to set. name=value; you may provide this flag "+
 			"any number of times to set multiple annotations. "+
 			"To unset, specify the annotation name followed by a \"-\" (e.g., name-).")
 	p.markFlagMakesRevision("annotation")
+
 	command.Flags().StringVar(&p.ImagePullSecrets,
 		"pull-secret",
 		"",
 		"Image pull secret to set. An empty argument (\"\") clears the pull secret. The referenced secret must exist in the service's namespace.")
 	p.markFlagMakesRevision("pull-secret")
+	command.Flags().Int64VarP(&p.User, "user", "", 0, "The user ID to run the container (e.g., 1001).")
+	p.markFlagMakesRevision("user")
 }
 
 // AddUpdateFlags adds the flags specific to update.
@@ -187,15 +250,11 @@ func (p *ConfigurationEditFlags) AddCreateFlags(command *cobra.Command) {
 
 // Apply mutates the given service according to the flags in the command.
 func (p *ConfigurationEditFlags) Apply(
-	service *servingv1alpha1.Service,
-	baseRevision *servingv1alpha1.Revision,
+	service *servingv1.Service,
+	baseRevision *servingv1.Revision,
 	cmd *cobra.Command) error {
 
-	template, err := servinglib.RevisionTemplateOfService(service)
-	if err != nil {
-		return err
-	}
-
+	template := &service.Spec.Template
 	if cmd.Flags().Changed("env") {
 		envMap, err := util.MapFromArrayAllowingSingles(p.Env, "=")
 		if err != nil {
@@ -222,7 +281,7 @@ func (p *ConfigurationEditFlags) Apply(
 			}
 		}
 
-		err = servinglib.UpdateEnvFrom(template, envFromSourceToUpdate, envFromSourceToRemove)
+		err := servinglib.UpdateEnvFrom(template, envFromSourceToUpdate, envFromSourceToRemove)
 		if err != nil {
 			return err
 		}
@@ -251,17 +310,12 @@ func (p *ConfigurationEditFlags) Apply(
 	}
 
 	if p.AnyMutation(cmd) {
-		err = servinglib.UpdateName(template, name)
-		if err == servinglib.ApiTooOldError && !cmd.Flags().Changed("revision-name") {
-			// Ignore the error if we don't support revision names and nobody
-			// explicitly asked for one.
-		} else if err != nil {
-			return err
-		}
+		template.Name = name
 	}
+
 	imageSet := false
 	if cmd.Flags().Changed("image") {
-		err = servinglib.UpdateImage(template, p.Image)
+		err = servinglib.UpdateImage(template, p.Image.String())
 		if err != nil {
 			return err
 		}
@@ -350,16 +404,30 @@ func (p *ConfigurationEditFlags) Apply(
 		}
 	}
 
-	if cmd.Flags().Changed("label") {
-		labelsMap, err := util.MapFromArrayAllowingSingles(p.Labels, "=")
+	if cmd.Flags().Changed("cluster-local") || cmd.Flags().Changed("no-cluster-local") {
+		if p.ClusterLocal {
+			labels := servinglib.UpdateLabels(service.ObjectMeta.Labels, map[string]string{serving.VisibilityLabelKey: serving.VisibilityClusterLocal}, []string{})
+			service.ObjectMeta.Labels = labels // In case service.ObjectMeta.Labels was nil
+		} else {
+			labels := servinglib.UpdateLabels(service.ObjectMeta.Labels, map[string]string{}, []string{serving.VisibilityLabelKey})
+			service.ObjectMeta.Labels = labels // In case service.ObjectMeta.Labels was nil
+		}
+	}
+
+	if cmd.Flags().Changed("label") || cmd.Flags().Changed("label-service") || cmd.Flags().Changed("label-revision") {
+		labelsAllMap, err := util.MapFromArrayAllowingSingles(p.Labels, "=")
 		if err != nil {
 			return errors.Wrap(err, "Invalid --label")
 		}
 
-		labelsToRemove := util.ParseMinusSuffix(labelsMap)
-		err = servinglib.UpdateLabels(service, template, labelsMap, labelsToRemove)
+		err = p.updateLabels(&service.ObjectMeta, p.LabelsService, labelsAllMap)
 		if err != nil {
-			return err
+			return errors.Wrap(err, "Invalid --label-service")
+		}
+
+		err = p.updateLabels(&template.ObjectMeta, p.LabelsRevision, labelsAllMap)
+		if err != nil {
+			return errors.Wrap(err, "Invalid --label-revision")
 		}
 	}
 
@@ -386,6 +454,24 @@ func (p *ConfigurationEditFlags) Apply(
 	if cmd.Flags().Changed("pull-secret") {
 		servinglib.UpdateImagePullSecrets(template, p.ImagePullSecrets)
 	}
+
+	if cmd.Flags().Changed("user") {
+		servinglib.UpdateUser(template, p.User)
+	}
+
+	return nil
+}
+
+func (p *ConfigurationEditFlags) updateLabels(obj *metav1.ObjectMeta, flagLabels []string, labelsAllMap map[string]string) error {
+	labelFlagMap, err := util.MapFromArrayAllowingSingles(flagLabels, "=")
+	if err != nil {
+		return errors.Wrap(err, "Unable to parse label flags")
+	}
+	labelsMap := make(util.StringMap)
+	labelsMap.Merge(labelsAllMap)
+	labelsMap.Merge(labelFlagMap)
+	revisionLabelsToRemove := util.ParseMinusSuffix(labelsMap)
+	obj.Labels = servinglib.UpdateLabels(obj.Labels, labelsMap, revisionLabelsToRemove)
 
 	return nil
 }

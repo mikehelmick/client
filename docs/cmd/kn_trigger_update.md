@@ -31,6 +31,7 @@ kn trigger update NAME --filter KEY=VALUE --sink SINK [flags]
       --broker string      Name of the Broker which the trigger associates with. (default "default")
       --filter strings     Key-value pair for exact CloudEvent attribute matching against incoming events, e.g type=dev.knative.foo
   -h, --help               help for update
+      --inject-broker      Create new broker with name default through common annotation
   -n, --namespace string   Specify the namespace to operate in.
   -s, --sink string        Addressable sink for events
 ```
@@ -38,8 +39,8 @@ kn trigger update NAME --filter KEY=VALUE --sink SINK [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string       kn config file (default is $HOME/.kn/config.yaml)
-      --kubeconfig string   kubectl config file (default is $HOME/.kube/config)
+      --config string       kn config file (default is ~/.config/kn/config.yaml)
+      --kubeconfig string   kubectl config file (default is ~/.kube/config)
       --log-http            log http traffic
 ```
 

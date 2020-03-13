@@ -15,7 +15,7 @@ kn source binding create NAME --subject SCHEDULE --sink SINK --ce-override KEY=V
 ```
 
   # Create a sink binding which connects a deployment 'myapp' with a Knative service 'mysvc'
-  kn source binding create my-binding --subject Deployemnt:apps/v1:myapp --sink svc:mysvc
+  kn source binding create my-binding --subject Deployment:apps/v1:myapp --sink svc:mysvc
 ```
 
 ### Options
@@ -31,8 +31,8 @@ kn source binding create NAME --subject SCHEDULE --sink SINK --ce-override KEY=V
 ### Options inherited from parent commands
 
 ```
-      --config string       kn config file (default is $HOME/.kn/config.yaml)
-      --kubeconfig string   kubectl config file (default is $HOME/.kube/config)
+      --config string       kn config file (default is ~/.config/kn/config.yaml)
+      --kubeconfig string   kubectl config file (default is ~/.kube/config)
       --log-http            log http traffic
 ```
 

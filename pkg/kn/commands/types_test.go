@@ -61,7 +61,7 @@ func TestPrepareConfig(t *testing.T) {
 	for i, tc := range []configTestCase{
 		{
 			clientcmd.NewDefaultClientConfig(clientcmdapi.Config{}, &clientcmd.ConfigOverrides{}),
-			"no configuration has been provided",
+			"no kubeconfig has been provided, please use a valid configuration to connect to the cluster",
 			false,
 		},
 		{
@@ -151,7 +151,7 @@ func TestNewSourcesClient(t *testing.T) {
 	for i, tc := range []configTestCase{
 		{
 			clientcmd.NewDefaultClientConfig(clientcmdapi.Config{}, &clientcmd.ConfigOverrides{}),
-			"no configuration has been provided",
+			"no kubeconfig has been provided, please use a valid configuration to connect to the cluster",
 			false,
 		},
 		{
@@ -187,8 +187,8 @@ func TestNewSourcesClient(t *testing.T) {
 		}
 
 		if sourcesClient != nil {
-			assert.Assert(t, sourcesClient.APIServerSourcesClient().Namespace() == namespace)
-			assert.Assert(t, sourcesClient.CronJobSourcesClient().Namespace() == namespace)
+			assert.Assert(t, sourcesClient.SinkBindingClient().Namespace() == namespace)
+			assert.Assert(t, sourcesClient.PingSourcesClient().Namespace() == namespace)
 		}
 	}
 }
@@ -202,7 +202,7 @@ func TestNewDynamicClient(t *testing.T) {
 	for i, tc := range []configTestCase{
 		{
 			clientcmd.NewDefaultClientConfig(clientcmdapi.Config{}, &clientcmd.ConfigOverrides{}),
-			"no configuration has been provided",
+			"no kubeconfig has been provided, please use a valid configuration to connect to the cluster",
 			false,
 		},
 		{

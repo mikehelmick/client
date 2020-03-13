@@ -18,6 +18,7 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"knative.dev/client/pkg/kn/commands"
 	"knative.dev/client/pkg/kn/commands/flags"
 )
@@ -30,6 +31,9 @@ func NewAPIServerListCommand(p *commands.KnParams) *cobra.Command {
 		Use:   "list",
 		Short: "List ApiServer sources.",
 		Example: `
+  # List all ApiServer sources
+  kn source apiserver list
+
   # List all ApiServer sources in YAML format
   kn source apiserver list -o yaml`,
 

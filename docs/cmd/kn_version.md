@@ -13,14 +13,15 @@ kn version [flags]
 ### Options
 
 ```
-  -h, --help   help for version
+  -h, --help            help for version
+  -o, --output string   Output format. One of: json|yaml.
 ```
 
 ### Options inherited from parent commands
 
 ```
-      --config string       kn config file (default is $HOME/.kn/config.yaml)
-      --kubeconfig string   kubectl config file (default is $HOME/.kube/config)
+      --config string       kn config file (default is ~/.config/kn/config.yaml)
+      --kubeconfig string   kubectl config file (default is ~/.kube/config)
       --log-http            log http traffic
 ```
 

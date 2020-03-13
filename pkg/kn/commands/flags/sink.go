@@ -19,12 +19,13 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	kn_dynamic "knative.dev/client/pkg/dynamic"
 	"knative.dev/pkg/apis"
-	duckv1beta1 "knative.dev/pkg/apis/duck/v1beta1"
+	duckv1 "knative.dev/pkg/apis/duck/v1"
+
+	clientdynamic "knative.dev/client/pkg/dynamic"
+	"knative.dev/client/pkg/kn/commands"
 )
 
 type SinkFlags struct {
@@ -45,19 +46,30 @@ var SinkPrefixes = map[string]schema.GroupVersionResource{
 	"service": {
 		Resource: "services",
 		Group:    "serving.knative.dev",
-		Version:  "v1alpha1",
+		Version:  "v1",
 	},
 	// Shorthand alias for service
 	"svc": {
 		Resource: "services",
 		Group:    "serving.knative.dev",
-		Version:  "v1alpha1",
+		Version:  "v1",
 	},
+}
+
+func ConfigSinkPrefixes(prefixes []commands.SinkPrefixConfig) {
+	for _, p := range prefixes {
+		//user configration might override the default configuration
+		SinkPrefixes[p.Prefix] = schema.GroupVersionResource{
+			Resource: p.Resource,
+			Group:    p.Group,
+			Version:  p.Version,
+		}
+	}
 }
 
 // ResolveSink returns the Destination referred to by the flags in the acceptor.
 // It validates that any object the user is referring to exists.
-func (i *SinkFlags) ResolveSink(knclient kn_dynamic.KnDynamicClient, namespace string) (*duckv1beta1.Destination, error) {
+func (i *SinkFlags) ResolveSink(knclient clientdynamic.KnDynamicClient, namespace string) (*duckv1.Destination, error) {
 	client := knclient.RawClient()
 	if i.sink == "" {
 		return nil, nil
@@ -70,19 +82,19 @@ func (i *SinkFlags) ResolveSink(knclient kn_dynamic.KnDynamicClient, namespace s
 		if err != nil {
 			return nil, err
 		}
-		return &duckv1beta1.Destination{URI: uri}, nil
+		return &duckv1.Destination{URI: uri}, nil
 	}
 	typ, ok := SinkPrefixes[prefix]
 	if !ok {
-		return nil, fmt.Errorf("Not supported sink type: %s", i.sink)
+		return nil, fmt.Errorf("unsupported sink type: %s", i.sink)
 	}
 	obj, err := client.Resource(typ).Namespace(namespace).Get(name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
-	destination := &duckv1beta1.Destination{
-		Ref: &v1.ObjectReference{
+	destination := &duckv1.Destination{
+		Ref: &duckv1.KReference{
 			Kind:       obj.GetKind(),
 			APIVersion: obj.GetAPIVersion(),
 			Name:       obj.GetName(),
@@ -104,4 +116,19 @@ func parseSink(sink string) (string, string) {
 	} else {
 		return parts[0], parts[1]
 	}
+}
+
+// SinkToString prepares a sink for list output
+func SinkToString(sink duckv1.Destination) string {
+	if sink.Ref != nil {
+		if sink.Ref.Kind == "Service" {
+			return fmt.Sprintf("svc:%s", sink.Ref.Name)
+		} else {
+			return fmt.Sprintf("%s:%s", strings.ToLower(sink.Ref.Kind), sink.Ref.Name)
+		}
+	}
+	if sink.URI != nil {
+		return sink.URI.String()
+	}
+	return ""
 }

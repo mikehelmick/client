@@ -18,11 +18,12 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
+
 	"knative.dev/client/pkg/kn/commands"
 	"knative.dev/client/pkg/kn/commands/flags"
 )
 
-// NewListTypesCommand defines and processes `kn source list-types` command operations
+// NewListTypesCommand defines and processes `kn source list-types`
 func NewListTypesCommand(p *commands.KnParams) *cobra.Command {
 	listTypesFlags := flags.NewListPrintFlags(ListTypesHandlers)
 	listTypesCommand := &cobra.Command{
@@ -32,7 +33,7 @@ func NewListTypesCommand(p *commands.KnParams) *cobra.Command {
   # List available eventing source types
   kn source list-types
 
-  # List available eventing source types in JSON format
+  # List available eventing source types in YAML format
   kn source list-types -o yaml`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			namespace, err := p.GetNamespace(cmd)

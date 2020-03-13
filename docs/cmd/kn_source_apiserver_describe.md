@@ -1,10 +1,10 @@
 ## kn source apiserver describe
 
-Describe an ApiServer source.
+Show details of an ApiServer source
 
 ### Synopsis
 
-Describe an ApiServer source.
+Show details of an ApiServer source
 
 ```
 kn source apiserver describe NAME [flags]
@@ -29,8 +29,8 @@ kn source apiserver describe NAME [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string       kn config file (default is $HOME/.kn/config.yaml)
-      --kubeconfig string   kubectl config file (default is $HOME/.kube/config)
+      --config string       kn config file (default is ~/.config/kn/config.yaml)
+      --kubeconfig string   kubectl config file (default is ~/.kube/config)
       --log-http            log http traffic
 ```
 

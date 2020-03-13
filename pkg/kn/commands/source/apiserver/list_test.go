@@ -19,13 +19,14 @@ import (
 
 	"gotest.tools/assert"
 
-	knsource_v1alpha1 "knative.dev/client/pkg/eventing/legacysources/v1alpha1"
+	"knative.dev/eventing/pkg/apis/sources/v1alpha1"
+
+	clientv1alpha1 "knative.dev/client/pkg/sources/v1alpha1"
 	"knative.dev/client/pkg/util"
-	"knative.dev/eventing/pkg/apis/legacysources/v1alpha1"
 )
 
 func TestListAPIServerSource(t *testing.T) {
-	apiServerClient := knsource_v1alpha1.NewMockKnAPIServerSourceClient(t)
+	apiServerClient := clientv1alpha1.NewMockKnAPIServerSourceClient(t)
 
 	apiServerRecorder := apiServerClient.Recorder()
 	sampleSource := createAPIServerSource("testsource", "Event", "v1", "testsa", "Ref", "testsvc", false)
@@ -36,14 +37,14 @@ func TestListAPIServerSource(t *testing.T) {
 
 	out, err := executeAPIServerSourceCommand(apiServerClient, nil, "list")
 	assert.NilError(t, err, "sources should be listed")
-	util.ContainsAll(out, "NAME", "RESOURCES", "SINK", "CONDITIONS", "READY", "REASON")
+	util.ContainsAll(out, "NAME", "RESOURCES", "SINK", "AGE", "CONDITIONS", "READY", "REASON")
 	util.ContainsAll(out, "testsource", "Eventing:v1:false", "mysvc")
 
 	apiServerRecorder.Validate()
 }
 
 func TestListAPIServerSourceEmpty(t *testing.T) {
-	apiServerClient := knsource_v1alpha1.NewMockKnAPIServerSourceClient(t)
+	apiServerClient := clientv1alpha1.NewMockKnAPIServerSourceClient(t)
 
 	apiServerRecorder := apiServerClient.Recorder()
 	sampleSourceList := v1alpha1.ApiServerSourceList{}
@@ -52,7 +53,7 @@ func TestListAPIServerSourceEmpty(t *testing.T) {
 
 	out, err := executeAPIServerSourceCommand(apiServerClient, nil, "list")
 	assert.NilError(t, err, "Sources should be listed")
-	util.ContainsNone(out, "NAME", "RESOURCES", "SINK", "CONDITIONS", "READY", "REASON")
+	util.ContainsNone(out, "NAME", "RESOURCES", "SINK", "AGE", "CONDITIONS", "READY", "REASON")
 	util.ContainsAll(out, "No", "ApiServer", "source", "found")
 
 	apiServerRecorder.Validate()

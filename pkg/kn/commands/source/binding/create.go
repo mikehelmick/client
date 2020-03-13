@@ -22,7 +22,7 @@ import (
 
 	"knative.dev/client/pkg/kn/commands"
 	"knative.dev/client/pkg/kn/commands/flags"
-	v1alpha12 "knative.dev/client/pkg/sources/v1alpha1"
+	v1alpha12 "knative.dev/client/pkg/sources/v1alpha2"
 )
 
 // NewBindingCreateCommand is for creating sink bindings
@@ -35,7 +35,7 @@ func NewBindingCreateCommand(p *commands.KnParams) *cobra.Command {
 		Short: "Create a sink binding.",
 		Example: `
   # Create a sink binding which connects a deployment 'myapp' with a Knative service 'mysvc'
-  kn source binding create my-binding --subject Deployemnt:apps/v1:myapp --sink svc:mysvc`,
+  kn source binding create my-binding --subject Deployment:apps/v1:myapp --sink svc:mysvc`,
 
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			if len(args) != 1 {
@@ -69,7 +69,7 @@ func NewBindingCreateCommand(p *commands.KnParams) *cobra.Command {
 			}
 
 			bindingBuilder := v1alpha12.NewSinkBindingBuilder(name).
-				Sink(toDuckV1(destination)).
+				Sink(destination).
 				Subject(reference).
 				Namespace(namespace)
 

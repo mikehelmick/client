@@ -1,10 +1,10 @@
 ## kn revision describe
 
-Describe revisions.
+Show details of a revision
 
 ### Synopsis
 
-Describe revisions.
+Show details of a revision
 
 ```
 kn revision describe NAME [flags]
@@ -24,8 +24,8 @@ kn revision describe NAME [flags]
 ### Options inherited from parent commands
 
 ```
-      --config string       kn config file (default is $HOME/.kn/config.yaml)
-      --kubeconfig string   kubectl config file (default is $HOME/.kube/config)
+      --config string       kn config file (default is ~/.config/kn/config.yaml)
+      --kubeconfig string   kubectl config file (default is ~/.kube/config)
       --log-http            log http traffic
 ```
 

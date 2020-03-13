@@ -19,16 +19,17 @@ import (
 	"fmt"
 
 	"github.com/spf13/cobra"
-	api_errors "k8s.io/apimachinery/pkg/api/errors"
+
 	"knative.dev/client/pkg/kn/commands/flags"
 	"knative.dev/client/pkg/kn/traffic"
 
+	servingv1 "knative.dev/serving/pkg/apis/serving/v1"
+
 	"knative.dev/client/pkg/kn/commands"
-	serving "knative.dev/client/pkg/serving/v1alpha1"
-	"knative.dev/serving/pkg/apis/serving/v1alpha1"
+	clientservingv1 "knative.dev/client/pkg/serving/v1"
 )
 
-var update_example = `
+var updateExample = `
   # Updates a service 'svc' with new environment variables
   kn service update svc --env KEY1=VALUE1 --env KEY2=VALUE2
 
@@ -56,7 +57,7 @@ func NewServiceUpdateCommand(p *commands.KnParams) *cobra.Command {
 	serviceUpdateCommand := &cobra.Command{
 		Use:     "update NAME [flags]",
 		Short:   "Update a service.",
-		Example: update_example,
+		Example: updateExample,
 		RunE: func(cmd *cobra.Command, args []string) (err error) {
 			if len(args) != 1 {
 				return errors.New("requires the service name")
@@ -72,62 +73,61 @@ func NewServiceUpdateCommand(p *commands.KnParams) *cobra.Command {
 				return err
 			}
 
-			var retries = 0
-			for {
-				name := args[0]
-				service, err := client.GetService(name)
-				if err != nil {
-					return err
-				}
-				service = service.DeepCopy()
-				latestRevisionBeforeUpdate := service.Status.LatestReadyRevisionName
-				var baseRevision *v1alpha1.Revision
+			// Use to store the latest revision name
+			var latestRevisionBeforeUpdate string
+			name := args[0]
+
+			updateFunc := func(service *servingv1.Service) (*servingv1.Service, error) {
+				latestRevisionBeforeUpdate = service.Status.LatestReadyRevisionName
+				var baseRevision *servingv1.Revision
 				if !cmd.Flags().Changed("image") && editFlags.LockToDigest {
 					baseRevision, err = client.GetBaseRevision(service)
-					if _, ok := err.(*serving.NoBaseRevisionError); ok {
+					if _, ok := err.(*clientservingv1.NoBaseRevisionError); ok {
 						fmt.Fprintf(cmd.OutOrStdout(), "Warning: No revision found to update image digest")
 					}
 				}
 				err = editFlags.Apply(service, baseRevision, cmd)
 				if err != nil {
-					return err
+					return nil, err
 				}
 
 				if trafficFlags.Changed(cmd) {
 					traffic, err := traffic.Compute(cmd, service.Spec.Traffic, &trafficFlags)
 					if err != nil {
-						return err
+						return nil, err
 					}
 
 					service.Spec.Traffic = traffic
 				}
+				return service, nil
+			}
 
-				err = client.UpdateService(service)
+			// Do the actual update with retry in case of conflicts
+			err = client.UpdateServiceWithRetry(name, updateFunc, MaxUpdateRetries)
+			if err != nil {
+				return err
+			}
+
+			out := cmd.OutOrStdout()
+			//TODO: deprecated condition should be once --async is gone
+			if !waitFlags.Async && !waitFlags.NoWait {
+				fmt.Fprintf(out, "Updating Service '%s' in namespace '%s':\n", args[0], namespace)
+				fmt.Fprintln(out, "")
+				err := waitForService(client, name, out, waitFlags.TimeoutInSeconds)
 				if err != nil {
-					// Retry to update when a resource version conflict exists
-					if api_errors.IsConflict(err) && retries < MaxUpdateRetries {
-						retries++
-						continue
-					}
 					return err
 				}
-
-				out := cmd.OutOrStdout()
-				if !waitFlags.Async {
-					fmt.Fprintf(out, "Updating Service '%s' in namespace '%s':\n", args[0], namespace)
-					fmt.Fprintln(out, "")
-					err := waitForService(client, name, out, waitFlags.TimeoutInSeconds)
-					if err != nil {
-						return err
-					}
-					fmt.Fprintln(out, "")
-					return showUrl(client, name, latestRevisionBeforeUpdate, "updated", out)
-				} else {
-					fmt.Fprintf(out, "Service '%s' updated in namespace '%s'.\n", args[0], namespace)
+				fmt.Fprintln(out, "")
+				return showUrl(client, name, latestRevisionBeforeUpdate, "updated", out)
+			} else {
+				if waitFlags.Async {
+					fmt.Fprintf(out, "\nWARNING: flag --async is deprecated and going to be removed in future release, please use --no-wait instead.\n\n")
 				}
-
-				return nil
+				fmt.Fprintf(out, "Service '%s' updated in namespace '%s'.\n", args[0], namespace)
 			}
+
+			return nil
+
 		},
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return preCheck(cmd, args)
@@ -136,7 +136,7 @@ func NewServiceUpdateCommand(p *commands.KnParams) *cobra.Command {
 
 	commands.AddNamespaceFlags(serviceUpdateCommand.Flags(), false)
 	editFlags.AddUpdateFlags(serviceUpdateCommand)
-	waitFlags.AddConditionWaitFlags(serviceUpdateCommand, commands.WaitDefaultTimeout, "Update", "service")
+	waitFlags.AddConditionWaitFlags(serviceUpdateCommand, commands.WaitDefaultTimeout, "Update", "service", "ready")
 	trafficFlags.Add(serviceUpdateCommand)
 	return serviceUpdateCommand
 }

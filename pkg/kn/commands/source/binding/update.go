@@ -22,7 +22,7 @@ import (
 
 	"knative.dev/client/pkg/kn/commands"
 	"knative.dev/client/pkg/kn/commands/flags"
-	v1alpha12 "knative.dev/client/pkg/sources/v1alpha1"
+	v1alpha12 "knative.dev/client/pkg/sources/v1alpha2"
 )
 
 // NewBindingUpdateCommand prepares the command for a sink binding update
@@ -68,7 +68,7 @@ func NewBindingUpdateCommand(p *commands.KnParams) *cobra.Command {
 				if err != nil {
 					return err
 				}
-				b.Sink(toDuckV1(destination))
+				b.Sink(destination)
 			}
 			if cmd.Flags().Changed("subject") {
 				reference, err := toReference(bindingFlags.subject, namespace)

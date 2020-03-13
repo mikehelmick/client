@@ -20,7 +20,7 @@ import (
 	"sort"
 
 	"github.com/spf13/cobra"
-	v1alpha12 "knative.dev/eventing/pkg/apis/sources/v1alpha1"
+	v1alpha2 "knative.dev/eventing/pkg/apis/sources/v1alpha2"
 	duckv1 "knative.dev/pkg/apis/duck/v1"
 	"knative.dev/pkg/tracker"
 
@@ -32,13 +32,13 @@ import (
 func NewBindingDescribeCommand(p *commands.KnParams) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "describe NAME",
-		Short: "Describe a sink binding.",
+		Short: "Show details of a sink binding",
 		Example: `
   # Describe a sink binding with name 'mysinkbinding'
   kn source binding describe mysinkbinding`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
-				return errors.New("'kn source binding describe' requires the name of the source as single argument")
+				return errors.New("'kn source binding describe' requires name of the sink binding as single argument")
 			}
 			name := args[0]
 
@@ -82,7 +82,7 @@ func NewBindingDescribeCommand(p *commands.KnParams) *cobra.Command {
 	return cmd
 }
 
-func writeSinkBinding(dw printers.PrefixWriter, binding *v1alpha12.SinkBinding, printDetails bool) {
+func writeSinkBinding(dw printers.PrefixWriter, binding *v1alpha2.SinkBinding, printDetails bool) {
 	commands.WriteMetadata(dw, &binding.ObjectMeta, printDetails)
 	writeSubject(dw, binding.Namespace, &binding.Spec.Subject)
 	writeSink(dw, binding.Namespace, &binding.Spec.Sink)
@@ -141,6 +141,6 @@ func writeSubject(dw printers.PrefixWriter, namespace string, subject *tracker.R
 				matchDw.WriteAttribute(k, selector.MatchLabels[k])
 			}
 		}
-		// TOOD: Print out selector.MatchExpressions
+		// TODO: Print out selector.MatchExpressions
 	}
 }
